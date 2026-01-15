@@ -2,7 +2,7 @@
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
-import { Camera, MathUtils, PlaneGeometry, Mesh } from "three"
+import { PlaneGeometry, Mesh, ShaderMaterial } from "three"
 
 import VShader from '../shaders/vertex.glsl'
 import FShader from '../shaders/fragment.glsl'
@@ -13,7 +13,7 @@ import LightFShader from '../shaders/thirdShader/thirdFragment.glsl'
 
 
 function InitShader() {
-	const mesh = useRef<Mesh>(null)
+	const mesh = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
 	const uniforms = useMemo(
 		() => ({
 			uTime: { value: 0 },
