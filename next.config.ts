@@ -26,7 +26,7 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
 	output: "export",
-	// basePath: '/blogdenzel',
+	basePath: '/blogdenzel',
 	pageExtensions: ['md', 'mdx', 'ts', 'tsx'],
 	trailingSlash: true,
 
