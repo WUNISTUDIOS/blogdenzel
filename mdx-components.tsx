@@ -14,7 +14,7 @@ const components = {
 	),
 	h2: (props: HeadingProps) => (
 		<h2
-			className="text-gray-800 text-5xl dark:text-zinc-200 font-medium mt-8 mb-3"
+			className="text-gray-800 text-3xl dark:text-zinc-200 font-medium mt-8 mb-3"
 			{...props}
 		/>
 	),
