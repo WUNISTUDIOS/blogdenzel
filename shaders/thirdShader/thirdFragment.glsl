@@ -20,6 +20,6 @@ void main() {
         vec3 col = (distance > 0.0) ? colorA + 0.2 : colorC + 0.2;
         col = col * exp(distance);
         col *= 1.0 - exp(-6.0 * abs(distance));
-        col *= 0.9 + 0.2 * cos(20.0 * distance) * sin(uTime);
+        col *= 0.9 + 0.2 * cos(20.0 * distance) * vec3(sin(uTime), sin(uTime + 2.0),sin(uTime + 4.0));
         gl_FragColor = vec4(col, 1.0);
 }
