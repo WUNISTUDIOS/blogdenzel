@@ -1,6 +1,6 @@
 "use client"
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
 import { PlaneGeometry, Mesh, ShaderMaterial, DoubleSide } from "three"
 
@@ -14,6 +14,11 @@ import FourthVShader from '../shaders/fourthShader/fourthVertex.glsl'
 import FourthFShader from '../shaders/fourthShader/fourthFragment.glsl'
 
 function InitShader() {
+	const { viewport } = useThree()
+	const vw = viewport.width * (60 / 100)
+	const scale = vw / 35
+	const spacing = vw / 3
+
 	const mesh = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
 	const mesh01 = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
 	const mesh02 = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
@@ -38,40 +43,43 @@ function InitShader() {
 		<>
 			<mesh
 				ref={mesh}
-				position={[0, 0, 0]}
-				scale={1.5}
-			>
-				<planeGeometry args={[10, 10, 200, 200]} />
-				<shaderMaterial
-					fragmentShader={LightFShader}
-					vertexShader={LightVShader}
-					uniforms={uniforms}
-				/>
-			</mesh>
-
-			<mesh
-				ref={mesh01}
-				position={[0, 20, 0]}
-				scale={1.5}
+				position={[0, 0, 40]}
+				scale={scale}
 			>
 				<planeGeometry args={[10, 10, 200, 200]} />
 				<shaderMaterial
 					fragmentShader={SfShader}
 					vertexShader={SvShader}
 					uniforms={uniforms}
+					side={DoubleSide}
+				/>
+			</mesh>
+
+			<mesh
+				ref={mesh01}
+				position={[-spacing, 0, 40]}
+				scale={scale}
+			>
+				<planeGeometry args={[10, 10, 200, 200]} />
+				<shaderMaterial
+					fragmentShader={LightFShader}
+					vertexShader={LightVShader}
+					uniforms={uniforms}
+					side={DoubleSide}
 				/>
 			</mesh>
 
       <mesh
 				ref={mesh02}
-				position={[0, -20, 0]}
-				scale={1.5}
+				position={[spacing, 0, 40]}
+				scale={scale}
 			>
 				<planeGeometry args={[10, 10, 200, 200]} />
 				<shaderMaterial
 					fragmentShader={FourthFShader}
 					vertexShader={FourthVShader}
 					uniforms={uniforms}
+					side={DoubleSide}
 				/>
 			</mesh>
 		</>
@@ -80,7 +88,7 @@ function InitShader() {
 export default function InitOne() {
 	return (
 		<Canvas>
-			<OrbitControls />
+			<OrbitControls enabled={false} />
 			<PerspectiveCamera fov={30} position={[0, 0, 100]} makeDefault />
 			<InitShader />
 		</Canvas>

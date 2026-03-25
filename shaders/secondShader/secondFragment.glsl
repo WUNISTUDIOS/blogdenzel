@@ -15,7 +15,7 @@ float sdStar( in vec2 p, in float r, in int n, in float m)
 
     float bn = mod(atan(p.x,p.y),2.0*an) - an;
     p = length(p)*vec2(cos(bn),abs(sin(bn)));
-    p -= r*acs;
+    p -= r * acs;
     p += ecs*clamp( -dot(p,ecs), 0.0, r*acs.y/ecs.y);
     return length(p)*sign(p.x);
 }
@@ -27,18 +27,31 @@ float sdStar( in vec2 p, in float r, in int n, in float m)
   }
 
 void main() {
+  vec3 col = vec3(0.0);
 
-  float sigTime = sin(uTime * 0.5) * 0.02;
-  //star drawn
-  float sdf = sdStar(vUv - 0.5, 0.3, 5, sigTime) * 2.0;
+  vec2 uvRotation = rotate(vUv - 0.5, uTime * 0.05);
+  for (float i = 0.0; i < 10.0; i++){
+    float angle = uTime * 0.5 + i * (6.2 / 3.0);
+    float xPos = cos(angle) * 0.2;
+    float yPos = sin(angle) * 0.15;
+    vec2 pos = vec2(xPos, yPos) + 0.5;
 
+    float depthScale = smoothstep(-0.5, 0.5, yPos);
+    vec2 sdStarUv = (vUv - pos) / depthScale;
 
-  vec2 tiled = fract(vUv * 10.0) - 0.5;
-  vec2 rotated = rotate(tiled, 3.0 * 0.03);
-  sdf *= 0.2 / sdStar(rotated, 0.3, 5, uTime * 0.03);
+    vec2 uvRotated = rotate(vUv - 0.5, uTime * 0.5);
+    float sigTime = sin(uTime * 0.01) * 0.02;
+    //star drawn
+    // float sdf = sdStar(uvRotated, 0.3, 5, 0.5 + 1.0 * cos(uTime) * 0.1) * 5.0;
+    float sdf = sdStar(sdStarUv, 0.3, 5, 0.5 ) * 10.0;
 
-  vec3 col = (sdf  > 0.0) ? colorA + 0.2 : colorB + 0.3;
-  col = col * exp(1.0 * abs(sdf));
-  col *= 0.9 + cos(20.0 * sdf) * vec3(sin(uTime), sin(uTime + 2.0),sin(uTime + 4.0));
-  gl_FragColor = vec4(col, 1.0);
+    vec2 tiled = fract(vUv * 20.0) - 0.5;
+    vec2 rotated = rotate(tiled, 0.01 * 0.05) * uvRotation;
+    sdf *= 0.5 / max(abs(sdStar(rotated, 1.0, 1, uTime * 0.01)), 0.01);
+
+    col += (sdf  > 0.0) ? colorA + 2.0 : colorB - 0.3;
+    col = col * exp(-2.0 * abs(sdf));
+    col *= 0.9 + sdf * vec3(sin(uTime * 0.01),sin(uTime + 2.0) ,sin(uTime * 0.03));
+}
+   gl_FragColor = vec4(clamp(col * 0.9, 0.0, 1.0), 1.0);
 }
