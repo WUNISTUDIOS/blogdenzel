@@ -10,7 +10,7 @@ export function NameTransition(){
                     className="inline-block"
                     style={{transitionDelay: `${index * 25}ms`}}
                     > 
-                        {letter === "" ? "/u00A0" : letter}
+                        {letter === " " ? "\u00A0" : letter}
                     </span>
                 ))}
                 </span>
