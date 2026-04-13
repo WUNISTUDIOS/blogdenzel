@@ -3,6 +3,7 @@ import { useState } from "react"
 import InitOne from "@/components/initShader"
 import { NameTransition } from "../name"
 import ShaderControls, { ParamMap, SliderParam } from "@/components/ShaderControls"
+import ShaderRecorder from "@/components/ShaderRecorder"
 
 export default function WebShader() {
   const [params, setParams] = useState<ParamMap>({
@@ -14,7 +15,7 @@ export default function WebShader() {
   const dimensionScale = (params.dimensionScale as SliderParam).value
 
   return (
-    <div className="fixed inset-0">
+    <ShaderRecorder>
       <InitOne tileScale={tileScale} dimensionScale={dimensionScale} />
       <div className="absolute top-0 left-0 p-8">
         <NameTransition />
@@ -24,6 +25,6 @@ export default function WebShader() {
         params={params}
         onChange={setParams}
       />
-    </div>
+    </ShaderRecorder>
   )
 }

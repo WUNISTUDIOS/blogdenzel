@@ -3,6 +3,7 @@ import { OrbitControls, PerspectiveCamera } from "@react-three/drei"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { useMemo, useRef } from "react"
 import { PlaneGeometry, Mesh, ShaderMaterial, DoubleSide } from "three"
+import { useSoloMode } from './ShaderRecorder'
 
 import VShader from '../shaders/vertex.glsl'
 import FShader from '../shaders/fragment.glsl'
@@ -12,6 +13,8 @@ import LightVShader from '../shaders/thirdShader/thirdVertex.glsl'
 import LightFShader from '../shaders/thirdShader/thirdFragment.glsl'
 import FourthVShader from '../shaders/fourthShader/fourthVertex.glsl'
 import FourthFShader from '../shaders/fourthShader/fourthFragment.glsl'
+import FifthVShader from '../shaders/fifthShader/fifthVertex.glsl'
+import FifthFShader from '../shaders/fifthShader/fifthFragment.glsl'
 
 interface InitShaderProps {
   tileScale: number
@@ -20,6 +23,7 @@ interface InitShaderProps {
 
 function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
   const { viewport } = useThree()
+  const soloMode = useSoloMode()
   const vw = viewport.width * (60 / 100)
   const scale = vw / 35
   const spacing = vw / 3
@@ -27,7 +31,6 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
   const mesh = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
   const mesh01 = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
   const mesh02 = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
-  const meshBg = useRef<Mesh<PlaneGeometry, ShaderMaterial>>(null)
 
   const uniformsCenter = useMemo(
     () => ({
@@ -35,14 +38,6 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
       uTileScale: { value: tileScale },
       uDimensionScale: { value: dimensionScale },
       uAlpha: { value: 1.0 },
-    }), [])
-
-  const uniformsBg = useMemo(
-    () => ({
-      uTime: { value: 0 },
-      uTileScale: { value: tileScale },
-      uDimensionScale: { value: dimensionScale },
-      uAlpha: { value: 0.15 },
     }), [])
 
   const uniformsLeft = useMemo(
@@ -54,11 +49,6 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
   useFrame((state) => {
     const { clock } = state
     const t = clock.getElapsedTime()
-    if (meshBg.current) {
-      meshBg.current.material.uniforms.uTime.value = t
-      meshBg.current.material.uniforms.uTileScale.value = tileScale
-      meshBg.current.material.uniforms.uDimensionScale.value = dimensionScale
-    }
     if (mesh.current) {
       mesh.current.material.uniforms.uTime.value = t
       mesh.current.material.uniforms.uTileScale.value = tileScale
@@ -75,22 +65,8 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
   return (
     <>
       <mesh
-        ref={meshBg}
-        position={[0, 0, 0]}
-        scale={[viewport.width / 10, viewport.height / 10, 1]}
-      >
-        <planeGeometry args={[10, 10, 50, 50]} />
-        <shaderMaterial
-          fragmentShader={SfShader}
-          vertexShader={SvShader}
-          uniforms={uniformsBg}
-          side={DoubleSide}
-          transparent
-        />
-      </mesh>
-
-      <mesh
         ref={mesh}
+        visible={!soloMode}
         position={[0, 0, 40]}
         scale={scale}
       >
@@ -105,13 +81,13 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
 
       <mesh
         ref={mesh01}
-        position={[-spacing, 0, 40]}
-        scale={scale}
+        position={soloMode ? [0, 0, 40] : [-spacing, 0, 40]}
+        scale={soloMode ? viewport.width / 10 : scale}
       >
         <planeGeometry args={[10, 10, 200, 200]} />
         <shaderMaterial
-          fragmentShader={LightFShader}
-          vertexShader={LightVShader}
+          fragmentShader={FourthFShader}
+          vertexShader={FourthVShader}
           uniforms={uniformsLeft}
           side={DoubleSide}
         />
@@ -119,13 +95,14 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
 
       <mesh
         ref={mesh02}
+        visible={!soloMode}
         position={[spacing, 0, 40]}
         scale={scale}
       >
         <planeGeometry args={[10, 10, 200, 200]} />
         <shaderMaterial
-          fragmentShader={FourthFShader}
-          vertexShader={FourthVShader}
+          fragmentShader={FifthFShader}
+          vertexShader={FifthVShader}
           uniforms={uniformsRight}
           side={DoubleSide}
         />
@@ -141,7 +118,7 @@ interface InitOneProps {
 
 export default function InitOne({ tileScale, dimensionScale }: InitOneProps) {
   return (
-    <Canvas>
+    <Canvas gl={{ preserveDrawingBuffer: true }}>
       <OrbitControls enabled={false} />
       <PerspectiveCamera fov={30} position={[0, 0, 100]} makeDefault />
       <InitShader tileScale={tileScale} dimensionScale={dimensionScale} />
