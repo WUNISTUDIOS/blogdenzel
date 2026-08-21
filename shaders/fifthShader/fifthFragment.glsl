@@ -1,7 +1,7 @@
 uniform float uTime;
 varying vec2 vUv;
 
-#define MAX_STEPS 150
+#define MAX_STEPS 50
 #define MAX_DIST 100.0
 #define SURFACE_DIST 0.001
 
@@ -9,7 +9,7 @@ mat4 rotation3d(vec3 axis, float angle) {
   axis = normalize(axis);
   float s = sin(angle);
   float c = cos(angle);
-  float oc = 2.0 - c;
+  float oc = 1.0 - c;
 
   return mat4(
     oc * axis.x * axis.x + c, oc * axis.x * axis.y - axis.z * s, oc * axis.z * axis.x + axis.y * s, 0.0,
@@ -31,37 +31,31 @@ vec3 getColor(float amount) {
 }
 
 vec3 domainWrap(vec3 p) {
-  for (float d = 1.0; d <= 2.0; d++) {
-    p += sin(p * d - uTime * 0.2).xyz / d;
+  for (float d = 1.0; d < 5.0; d++) {
+    p += sin(p * d - uTime * 0.5).xyz / d;
   }
   return p;
 }
 
-float sdBoxFrame(vec3 p, vec3 b, float e)
-{
+float sdSphere(vec3 p, float radius) {
   vec3 wraped = domainWrap(p);
-  p = abs(p) - b;
-  vec3 q = abs(p + e) - e;
-  return min(min(
-      length(max(wraped.xyz, 0.0)) + min(max(p.x, max(q.y, q.z)), 0.0),
-      length(max(wraped.xyz, 0.0)) + min(max(q.x, max(p.y, q.z)), 0.0)),
-    length(max(vec3(q.x, q.y, p.z), 0.0)) + min(max(q.x, max(q.y, p.z)), 0.0));
+  return length(wraped) - radius;
 }
 
 float sdSine(vec3 p) {
-  return 2.0 - (sin(p.x) + (p.y) + sin(p.z)) / 3.0;
+  return 1.0 - (sin(p.x) + (p.y) + sin(p.z)) / 3.0;
 }
 
 float scene(vec3 p) {
   vec3 p1 = rotate(p, vec3(1.0), uTime * 0.4);
-  float sphere = sdBoxFrame(p, p1, 1.0);
+  float sphere = sdSphere(p1, 1.5);
 
   float scale = 8.0 + 6.0 * sin(uTime * 0.5);
-  float sine = (2.0 - sdSine(p1 * scale)) / (scale * 2.0);
+  float sine = (0.8 - sdSine(p1 * scale)) / (scale * 2.0);
 
   float distance = max(sphere, sine);
 
-  return -distance;
+  return distance;
 }
 
 float raymarch(vec3 ro, vec3 rd) {
@@ -94,33 +88,31 @@ vec3 getNormal(vec3 p) {
 void main() {
 
   //rgb shift
-  vec3 rgbshift = vec3(abs(sin(uTime)), abs(sin(uTime + 5.0)), abs(sin(uTime + 4.0))) * 2.0 + 0.5;
+  vec3 rgbshift = 0.5 + 0.5 * vec3(sin(uTime), sin(uTime + 5.0), sin(uTime + 4.0));
   // col *= 0.9 + 0.2 * cos(20.0 * sdfbox) * rgbshift;
 
   //light position
-  vec3 lightPosition = vec3(-10.0 * cos(uTime), 10.0 * sin(uTime), 10.0 * abs(sin(-uTime * 0.5)));
+  // vec3 lightPosition = vec3(-10.0 * cos(uTime), 10.0 * sin(uTime), 10.0 * abs(sin(-uTime * 0.5)));
 
   //ray origin - camera
   vec3 ro = vec3(0.0, 0.0, 3.0);
   //ray direction
-  vec3 rd = normalize(vec3(vUv * 2.0 - 1.0, -1.0));
-  //ray marching
-  float d = raymarch(ro, rd);
-  vec3 p = ro + rd * d;
+  vec3 rd = normalize(vec3(vUv - 0.5, -1.0));
 
   vec4 color = vec4(0.0);
+
   float z = 0.0;
 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 70; i++) {
     vec3 p = ro + rd * z;
     float ds = scene(p);
-    color += vec4(getColor(z * 0.02) * rgbshift, 1.0) / max(abs(ds), 0.01);
+    // Accumulate color: bright near surface (small d), faint far away (large d)
+    color += vec4(getColor(z * 0.15) * rgbshift, 1.0) / max(abs(ds), 0.01);
 
+    // Conservative stepping: domainWrap breaks true SDF, full steps can overshoot
     z += max(abs(ds), 0.5) * 0.5;
-
-    z += mix(dot(rgbshift, sin(rd)), ds, 0.1) * 0.1;
 
     if (z > MAX_DIST) break;
   }
-  gl_FragColor = vec4(tanh(color.rgb / 5.0), 1.0);
+  gl_FragColor = vec4(tanh(color.rgb / 50.0), 1.0);
 }
