@@ -24,12 +24,9 @@
 import createMDX from '@next/mdx'
 import type { NextConfig } from 'next'
 
-const isProd = process.env.NODE_ENV === 'production'
-
 const nextConfig: NextConfig = {
 	output: "export",
-	// basePath: '/blogdenzel',
-	basePath: isProd ? '/blogdenzel' : '',
+	// no basePath — custom domain is served from root
 	pageExtensions: ['md', 'mdx', 'ts', 'tsx'],
 	trailingSlash: true,
 
