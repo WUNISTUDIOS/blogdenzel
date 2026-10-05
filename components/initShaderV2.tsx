@@ -5,12 +5,12 @@ import { useMemo, useRef } from "react"
 import { PlaneGeometry, Mesh, ShaderMaterial, DoubleSide } from "three"
 import { useSoloMode } from './ShaderRecorder'
 
-import SvShader from '../shaders/secondShader/secondvertex.glsl'
-import SfShader from '../shaders/secondShader/secondFragment.glsl'
-import FourthVShader from '../shaders/fourthShader/fourthVertex.glsl'
-import FourthFShader from '../shaders/fourthShader/fourthFragment.glsl'
-import FifthVShader from '../shaders/fifthShader/fifthVertex.glsl'
-import FifthFShader from '../shaders/fifthShader/fifthFragment.glsl'
+import VShader from '../shaders/vertex.glsl'
+import FShader from '../shaders/fragment.glsl'
+import LightVShader from '../shaders/thirdShader/thirdVertex.glsl'
+import LightFShader from '../shaders/thirdShader/thirdFragment.glsl'
+import StarVShader from '../shaders/sixthShader/sixthVertex.glsl'
+import StarFShader from '../shaders/sixthShader/sixthFragment.glsl'
 
 interface InitShaderProps {
   tileScale: number
@@ -49,8 +49,13 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
   const uniformsLeft = useMemo(
     () => ({ uTime: { value: 0 } }), [])
 
-  const uniformsRight = useMemo(
-    () => ({ uTime: { value: 0 } }), [])
+  const uniformsStar = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uStarTileScale: { value: tileScale },
+      uStarDimensionScale: { value: dimensionScale },
+      uStarAlpha: { value: 1.0 },
+    }), [])
 
   useFrame((state) => {
     const { clock } = state
@@ -65,6 +70,8 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
     }
     if (mesh02.current) {
       mesh02.current.material.uniforms.uTime.value = t
+      mesh02.current.material.uniforms.uStarTileScale.value = tileScale
+      mesh02.current.material.uniforms.uStarDimensionScale.value = dimensionScale
     }
   })
 
@@ -78,38 +85,36 @@ function InitShader({ tileScale, dimensionScale }: InitShaderProps) {
       >
         <planeGeometry args={[10, 10, 200, 200]} />
         <shaderMaterial
-          fragmentShader={SfShader}
-          vertexShader={SvShader}
+          fragmentShader={FShader}
+          vertexShader={VShader}
           uniforms={uniformsCenter}
           side={DoubleSide}
         />
       </mesh>
 
-      <mesh
+       <mesh
         ref={mesh01}
         position={soloMode ? [0, 0, 40] : at(-1)}
         scale={soloMode ? viewport.width / 10 : scale}
       >
         <planeGeometry args={[10, 10, 200, 200]} />
         <shaderMaterial
-          fragmentShader={FourthFShader}
-          vertexShader={FourthVShader}
+          fragmentShader={LightFShader}
+          vertexShader={LightVShader}
           uniforms={uniformsLeft}
           side={DoubleSide}
         />
       </mesh>
-
       <mesh
         ref={mesh02}
-        visible={!soloMode}
         position={at(1)}
-        scale={scale}
+        scale={soloMode ? viewport.width / 10 : scale}
       >
         <planeGeometry args={[10, 10, 200, 200]} />
         <shaderMaterial
-          fragmentShader={FifthFShader}
-          vertexShader={FifthVShader}
-          uniforms={uniformsRight}
+          fragmentShader={StarFShader}
+          vertexShader={StarVShader}
+          uniforms={uniformsStar}
           side={DoubleSide}
         />
       </mesh>
